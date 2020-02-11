@@ -3,10 +3,10 @@
 /*                                                              /             */
 /*   save_map.c                                       .::    .:/ .      .::   */
 /*                                                 +:+:+   +:    +:  +:+:+    */
-/*   By: jominodi <jominodi@student.le-101.fr>      +:+   +:    +:    +:+     */
+/*   By: videloff <videloff@student.le-101.fr>      +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/10/10 13:03:11 by videloff     #+#   ##    ##    #+#       */
-/*   Updated: 2020/02/04 11:20:43 by jominodi    ###    #+. /#+    ###.fr     */
+/*   Updated: 2020/02/11 15:56:30 by videloff    ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -72,8 +72,8 @@ int		set_line(char *line, int x, t_env *env, int len)
 	{
 		(line[i] && line[i] == ' ') ? i++ : i;
 		env->map[x][y].type = (y == 0 || y == env->map_y_max) ? 'W' : line[i++];
-		if (env->f_mini == 0 && env->map[x][y].type == 'F')
-			env->f_mini = set_spawn(x, y, env);
+		if (env->b_mini == 0 && env->map[x][y].type == 'B')
+			env->b_mini = set_spawn(x, y, env);
 	}
 	if (++x == env->map_x_max)
 	{

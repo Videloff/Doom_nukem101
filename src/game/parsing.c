@@ -6,7 +6,7 @@
 /*   By: videloff <videloff@student.le-101.fr>      +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/10/08 14:27:12 by yalabidi     #+#   ##    ##    #+#       */
-/*   Updated: 2020/01/10 14:24:10 by videloff    ###    #+. /#+    ###.fr     */
+/*   Updated: 2020/02/11 16:35:27 by videloff    ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -18,7 +18,7 @@ static void		set_map_null(t_env *env)
 	int i;
 
 	i = 0;
-	if (env->f_mini != 1)
+	if (env->b_mini != 1 || env->e_mini != 1)
 		free_env(env, 2);
 	while (i <= env->map_x_max)
 		env->map[i++] = NULL;
@@ -36,10 +36,11 @@ static int		second_open(char *file, t_env *env)
 		return (-1);
 	while (get_next_line(fd, &line) == 1)
 	{
-		y = set_line(line, y, env, ft_countword(line, ' '));
+		y = set_line(line, y, env, ft_strlen(line));
 		if (line)
 			free(line);
 	}
+	check_map_validity(env, file);
 	close(fd);
 	return (1);
 }
@@ -51,12 +52,22 @@ static int		valid_char(char *str, int x, t_env *env)
 	i = -1;
 	while (str[++i])
 	{
-		while (str[i] == ' ')
-			i++;
-		if (str[i] == 'F')
-			env->f_mini = 1;
-		if (str[i] != 'W' && str[i] != 'F' && str[i] != 'G' && str[i])
+		if (str[i] == 'B')
+			env->b_mini += 1;
+		else if (str[i] == 'E')
+			env->e_mini += 1;
+		if (str[i] != 'F' && str[i] != 'W' && str[i] != 'P' &&
+			str[i] != 'D' && str[i] != 'B' && str[i] != 'E' &&
+			str[i] != 'L' && str[i] != 'A' && str[i] != 'G' &&
+			str[i] != 'Z' && str[i] != 'K' && str[i] != 'C' && str[i])
 			return (-1);
+	}
+	if (env->b_mini != 1 || env->e_mini != 1)
+	{
+		ft_putstr("the current map has no or more than one");
+		ft_putstr(" beginning / ending block.\n");
+		free_env(env, 3);
+		error(1);
 	}
 	if (x != env->map_y_max)
 		return (-1);
@@ -73,7 +84,7 @@ static int		first_open(char *file, t_env *env, int x, int fd)
 	while ((tmp = get_next_line(fd, &line) > 0))
 	{
 		env->map_x_max++;
-		x = ft_countword(line, ' ');
+		x = ft_strlen(line);
 		env->map_y_max = (env->map_y_max == -1) ? x : env->map_y_max;
 		if (valid_char(line, x, env) == -1)
 		{
@@ -99,7 +110,6 @@ int				parsing(char *file, t_env *env)
 		free_env(env, 3);
 		error(1);
 	}
-	env->f_mini = 0;
 	if (!second_open(file, env))
 	{
 		free_env(env, 1);

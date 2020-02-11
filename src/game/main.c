@@ -3,10 +3,10 @@
 /*                                                              /             */
 /*   main.c                                           .::    .:/ .      .::   */
 /*                                                 +:+:+   +:    +:  +:+:+    */
-/*   By: jominodi <jominodi@student.le-101.fr>      +:+   +:    +:    +:+     */
+/*   By: videloff <videloff@student.le-101.fr>      +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/10/01 10:59:05 by videloff     #+#   ##    ##    #+#       */
-/*   Updated: 2020/02/05 10:24:51 by jominodi    ###    #+. /#+    ###.fr     */
+/*   Updated: 2020/02/11 14:35:46 by videloff    ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -46,10 +46,10 @@ static void		loop_mlx(t_env *env)
 	mlx_mouse_move(env->win_ptr, 500, -320);
 	mlx_hook(env->win_ptr, 2, 1, hold_key, env);
 	mlx_hook(env->win_ptr, 3, 2, unhold_key, env);
-	dprintf(1, "a");
 	mlx_hook(env->win_ptr, 6, 0, mouse_move, env);
 	mlx_mouse_hook(env->win_ptr, mouse_hook, env);
 	mlx_loop_hook(env->mlx_ptr, event_key, env);
+	mlx_mouse_hide();
 	mlx_loop(env->mlx_ptr);
 }
 
@@ -58,6 +58,8 @@ void			init_info(t_env *env)
 	ft_bzero(env, sizeof(t_env));
 	env->map_y_max = -1;
 	env->up = 300;
+	env->b_mini = 0;
+	env->e_mini = 0;
 	env->cam.speed = 6;
 	env->map_x_max = 1;
 	env->p_health = 100;
@@ -89,18 +91,26 @@ int				main(int ac, char **av)
 	t_env	*env;
 
 	fd = 0;
-	if (((fd = open(av[1], O_RDONLY)) < 1) || (read(fd, NULL, 0) == -1))
+	if ((((fd = open(av[1], O_RDONLY)) < 1) || (read(fd, NULL, 0) == -1)) && ac == 2 && ft_strcmp("create", av[1]) != 0)
 		error(1);
-	if (ac < 2 || ac > 4)
+	if (ac < 2 || ac >= 4)
 		usage();
-	if (!(env = malloc(sizeof(t_env))))
-		error(3);
-//	if (ac == 3 && ft_strcmp("edit", av[1]) == 1)
-	parsing(av[1], env);
-	close(fd);
-	if ((init_mlx(env)) < 0)
-		free_env(env, 4);
-	loop_mlx(env);
-	free_env(env, 0);
+	if (ac == 3 && ft_strcmp("edit", av[1]) == 0)
+		editor(av[2], ac);
+	else if (ac == 2 && ft_strcmp("create", av[1]) == 0)
+		editor(av[1], ac);
+	else if (ac == 2)
+	{
+		if (!(env = malloc(sizeof(t_env))))
+			error(3);
+		parsing(av[1], env);
+		close(fd);
+		if ((init_mlx(env)) < 0)
+			free_env(env, 4);
+		loop_mlx(env);
+		free_env(env, 0);
+	}
+	else
+		ft_putstr("please use ./doom-nukem edit map_name");
 	return (0);
 }
