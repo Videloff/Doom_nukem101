@@ -1,120 +1,94 @@
 /* ************************************************************************** */
-/*                                                          LE - /            */
-/*                                                              /             */
-/*   parsing.c                                        .::    .:/ .      .::   */
-/*                                                 +:+:+   +:    +:  +:+:+    */
-/*   By: videloff <videloff@student.le-101.fr>      +:+   +:    +:    +:+     */
-/*                                                 #+#   #+    #+    #+#      */
-/*   Created: 2019/10/08 14:27:12 by yalabidi     #+#   ##    ##    #+#       */
-/*   Updated: 2020/02/11 16:35:27 by videloff    ###    #+. /#+    ###.fr     */
-/*                                                         /                  */
-/*                                                        /                   */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parsing.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: videloff <videloff@student.le-101.fr>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2020/02/18 12:16:17 by jominodi          #+#    #+#             */
+/*   Updated: 2020/06/22 14:29:22 by videloff         ###   ########lyon.fr   */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "doom_nukem.h"
 
-static void		set_map_null(t_env *env)
+void		error_pars(int error, int fd)
+{
+	char *line;
+
+	if (fd != -13)
+	{
+		while (get_next_line(fd, &line))
+			free(line);
+		close(fd);
+	}
+	if (error == 1)
+		ft_putstr_fd("Specified filed does not exist or can't be read.\n", 2);
+	else if (error == 2)
+		ft_putstr_fd("Invalid char in the map file.\n", 2);
+	else if (error == 3)
+		ft_putstr_fd("There must be at least as much keys than doors.\n", 2);
+	else if (error == 4)
+	{
+		ft_putstr_fd("The file must be a 100x50 char and each line ", 2);
+		ft_putstr_fd("must be followed by a newline.\n", 2);
+	}
+	exit(-1);
+}
+
+void		set_spawn(t_env *env, int x, int y)
+{
+	env->cam.x = (x * BLOCK + 32);
+	env->cam.y = (y * BLOCK + 32);
+}
+
+void		save_map(char *line, t_env *env, int y)
 {
 	int i;
+	int x;
 
 	i = 0;
-	if (env->b_mini != 1 || env->e_mini != 1)
-		free_env(env, 2);
-	while (i <= env->map_x_max)
-		env->map[i++] = NULL;
+	x = 0;
+	while (i < env->size_x)
+	{
+		if (line[i] == 'K')
+			env->num_key++;
+		else if (line[i] == 'D')
+			env->num_door++;
+		env->map[y][x].type = line[i];
+		if (line[i] == 'B')
+			set_spawn(env, y, x);
+		i++;
+		env->map[y][x].id = line[i];
+		i++;
+		x++;
+	}
 }
 
-static int		second_open(char *file, t_env *env)
-{
-	int		y;
-	int		fd;
-	char	*tmp;
-	char	*line;
-
-	y = 0;
-	if (!((fd = open(file, O_RDONLY)) > 1) || (read(fd, &tmp, 0)) != 0)
-		return (-1);
-	while (get_next_line(fd, &line) == 1)
-	{
-		y = set_line(line, y, env, ft_strlen(line));
-		if (line)
-			free(line);
-	}
-	check_map_validity(env, file);
-	close(fd);
-	return (1);
-}
-
-static int		valid_char(char *str, int x, t_env *env)
-{
-	int		i;
-
-	i = -1;
-	while (str[++i])
-	{
-		if (str[i] == 'B')
-			env->b_mini += 1;
-		else if (str[i] == 'E')
-			env->e_mini += 1;
-		if (str[i] != 'F' && str[i] != 'W' && str[i] != 'P' &&
-			str[i] != 'D' && str[i] != 'B' && str[i] != 'E' &&
-			str[i] != 'L' && str[i] != 'A' && str[i] != 'G' &&
-			str[i] != 'Z' && str[i] != 'K' && str[i] != 'C' && str[i])
-			return (-1);
-	}
-	if (env->b_mini != 1 || env->e_mini != 1)
-	{
-		ft_putstr("the current map has no or more than one");
-		ft_putstr(" beginning / ending block.\n");
-		free_env(env, 3);
-		error(1);
-	}
-	if (x != env->map_y_max)
-		return (-1);
-	return (1);
-}
-
-static int		first_open(char *file, t_env *env, int x, int fd)
+void		parsing(char *filename, t_env *env, int fd)
 {
 	char	tmp;
 	char	*line;
+	int		i;
 
-	if ((!((fd = open(file, O_RDONLY)) > 1)) || ((read(fd, &tmp, 0)) != 0))
-		return (-1);
+	i = -1;
+	if ((!((fd = open(filename, O_RDONLY)) > 1)) ||
+			((read(fd, &tmp, 0)) != 0))
+		error_pars(1, -13);
 	while ((tmp = get_next_line(fd, &line) > 0))
 	{
-		env->map_x_max++;
-		x = ft_strlen(line);
-		env->map_y_max = (env->map_y_max == -1) ? x : env->map_y_max;
-		if (valid_char(line, x, env) == -1)
-		{
-			line ? free(line) : 0;
-			error(2);
-		}
-		line ? free(line) : 0;
+		env->size_x = ft_strlen(line);
+		if (valid_char_new(line) == -1)
+			error_pars(2, fd);
+		save_map(line, env, ++i);
+		free(line);
+		env->size_x != 100 ? error_pars(4, fd) : 0;
 	}
-	if (!(env->map = (t_block**)malloc(sizeof(t_block*) *
-			(env->map_x_max + 1))))
-		return (-1);
-	env->map_y_max++;
-	set_map_null(env);
+	if (i != 49)
+		error_pars(4, fd);
+	if (env->num_door != env->num_key)
+		error_pars(3, fd);
+	env->link_dk = env->num_key;
 	close(fd);
-	return (1);
-}
-
-int				parsing(char *file, t_env *env)
-{
-	init_info(env);
-	if (!first_open(file, env, 0, 0))
-	{
-		free_env(env, 3);
-		error(1);
-	}
-	if (!second_open(file, env))
-	{
-		free_env(env, 1);
-		error(1);
-	}
-	set_angle(env, 0);
-	return (0);
+	check_map(env);
 }

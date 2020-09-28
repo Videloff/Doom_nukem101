@@ -1,14 +1,13 @@
 /* ************************************************************************** */
-/*                                                          LE - /            */
-/*                                                              /             */
-/*   manage_mouse.c                                   .::    .:/ .      .::   */
-/*                                                 +:+:+   +:    +:  +:+:+    */
-/*   By: jominodi <jominodi@student.le-101.fr>      +:+   +:    +:    +:+     */
-/*                                                 #+#   #+    #+    #+#      */
-/*   Created: 2020/01/14 13:49:17 by kanne        #+#   ##    ##    #+#       */
-/*   Updated: 2020/02/04 12:40:10 by jominodi    ###    #+. /#+    ###.fr     */
-/*                                                         /                  */
-/*                                                        /                   */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   manage_mouse.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: videloff <videloff@student.le-101.fr>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2020/01/14 13:49:17 by kanne             #+#    #+#             */
+/*   Updated: 2020/06/22 14:29:22 by videloff         ###   ########lyon.fr   */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "doom_nukem.h"
@@ -39,30 +38,39 @@ void			event_mouse(t_env *env)
 {
 	if (env->ev.m_right == 0)
 	{
-		anglemove(&env->cam, SENSI);
+		anglemove(&env->cam, SENSIM);
 		env->ev.m_right = 1;
 	}
 	if (env->ev.m_left == 0)
 	{
-		anglemove(&env->cam, -SENSI);
+		anglemove(&env->cam, -SENSIM);
 		env->ev.m_left = 1;
 	}
 	if (env->ev.m_up == 0 && env->up > 0)
 	{
-		env->up -= 20;
+		env->up -= 5;
 		env->ev.m_up = 1;
 	}
 	if (env->ev.m_down == 0 && env->up < 600)
 	{
-		env->up += 20;
+		env->up += 5;
 		env->ev.m_down = 1;
 	}
 }
 
 int				mouse_move(int x, int y, t_env *env)
 {
-	dprintf(1, "d");
+	mlx_mouse_hide(env->mlx_ptr, env->win_ptr);
+	if (x < 5)
+		mlx_mouse_move(env->mlx_ptr, env->win_ptr, 480, y);
+	else if (x > 955)
+		mlx_mouse_move(env->mlx_ptr, env->win_ptr, 0, y);
+	else if (y < 5)
+		mlx_mouse_move(env->mlx_ptr, env->win_ptr, x, -600);
+	else if (y > 595)
+		mlx_mouse_move(env->mlx_ptr, env->win_ptr, x, 0);
 	vertical_move(y, env);
 	horizontal_move(x, env);
+	event_mouse(env);
 	return (0);
 }

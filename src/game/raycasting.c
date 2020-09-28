@@ -1,111 +1,72 @@
 /* ************************************************************************** */
-/*                                                          LE - /            */
-/*                                                              /             */
-/*   raycasting.c                                     .::    .:/ .      .::   */
-/*                                                 +:+:+   +:    +:  +:+:+    */
-/*   By: jominodi <jominodi@student.le-101.fr>      +:+   +:    +:    +:+     */
-/*                                                 #+#   #+    #+    #+#      */
-/*   Created: 2019/11/28 13:51:12 by videloff     #+#   ##    ##    #+#       */
-/*   Updated: 2020/02/07 17:01:52 by jominodi    ###    #+. /#+    ###.fr     */
-/*                                                         /                  */
-/*                                                        /                   */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   raycasting.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: videloff <videloff@student.le-101.fr>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/11/28 13:51:12 by videloff          #+#    #+#             */
+/*   Updated: 2020/06/22 14:29:22 by videloff         ###   ########lyon.fr   */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "doom_nukem.h"
 
-float	give_value(float ang, int dif)
-{
-	float	ya;
-
-	ya = 0.0;
-	if (dif == 1)
-		ya = (ang > 270 || ang < 90) ? 64 * tan(ang * M_PI / 180) :
-			-64 * tan(ang * M_PI / 180);
-	else if (dif == 2)
-		ya = (ang > 270 || ang < 90) ? 64 / fabs(tan(ang * M_PI / 180)) : -64 /
-			fabs(tan(ang * M_PI / 180));
-	return (ya);
-}
-
 t_ray	*find_ver_wall(t_env *env, float ang)
 {
-	float	xy[2];
-	float	xaya[2];
+	float	xy[4];
 	t_ray	*sprite;
 	t_ray	*ver;
 
 	ver = create_ray(0, 0, 0);
 	sprite = ver;
-	ver->id = (ang < 90 || ang > 270) ? 1 : 3;
-	xy[0] = (ang > 270 || ang < 90) ?
-		(int)(env->cam.y / 64) * 64 + 64 : (int)(env->cam.y / 64) * 64 - 1;
-	xy[1] = (ang > 270 || ang < 90) ?
-		env->cam.x - (env->cam.y - xy[0]) * tan(ang * M_PI / 180) :
-			env->cam.x - (env->cam.y - (xy[0] + 1)) * tan(ang * M_PI / 180);
-	xaya[1] = give_value(ang, 1);
-	xaya[0] = (ang > 270 || ang < 90) ? 64 : -64;
-	while ((int)xy[0] / 64 >= 0 && (int)xy[0] / 64 < env->map_y_max &&
-		(int)xy[1] / 64 >= 0 && (int)xy[1] / 64 < env->map_x_max)
+	set_xy(env->cam, ang, &xy, 0);
+	while ((int)xy[0] / 64 >= 0 && (int)xy[0] / 64 < SIZE_MAP &&
+		(int)xy[1] / 64 >= 0 && (int)xy[1] / 64 < SIZE_MAP)
 	{
-		if (env->map[(int)xy[1] / 64][(int)xy[0] / 64].type == 'G')
-		{
-			sprite->next = create_ray(sqrt(pow(env->cam.y - (int)xy[0], 2) + pow(env->cam.x -
-				(int)xy[1], 2)) * cos((ang - env->cam.angle) * M_PI / 180), (int)xy[1] % 64, 6);
-			sprite->type = 1;
+		if (check_type(xy, env->map, 'D'))
+			setup_door_v(env, xy, ang, &sprite);
+		if (check_type(xy, env->map, 'Y'))
+			sprite->next = create_spr(xy, env, ang);
+		if (check_type(xy, env->map, 'P'))
+			sprite->next = add_pane(xy, env, ang, 0);
+		if (sprite->next != NULL)
 			sprite = sprite->next;
-		}
-		if (env->map[(int)xy[1] / 64][(int)xy[0] / 64].type == 'W' ||
-			((int)xy[0] / 64 < 0 && (int)xy[0] / 64 >= env->map_y_max &&
-			(int)xy[1] / 64 < 0 && (int)xy[1] / 64 >= env->map_x_max))
-				break ;
-		xy[1] += xaya[1];
-		xy[0] += xaya[0];
+		if (check_type(xy, env->map, 'W'))
+			break ;
+		xy[1] += xy[3];
+		xy[0] += xy[2];
 	}
-	ver->dist = sqrt(pow(env->cam.y - (int)xy[0], 2) + pow(env->cam.x -
-		(int)xy[1], 2)) * cos((ang - env->cam.angle) * M_PI / 180);
-	ver->mod = (int)xy[1] % 64;
+	set_wall_v(ang, env, xy, ver);
 	return (ver);
 }
 
 t_ray	*find_hor_wall(t_env *env, float ang)
 {
-	float	xy[2];
-	float	xaya[2];
+	float	xy[4];
 	t_ray	*sprite;
 	t_ray	*hor;
 
 	hor = create_ray(0, 0, 0);
 	sprite = hor;
-	hor->id = (ang < 180) ? 0 : 2;
-	xy[1] = (ang < 180) ? (int)(env->cam.x / 64) * 64 + 64 :
-		(int)(env->cam.x / 64) * 64 - 1;
-	xy[0] = (ang < 180) ? env->cam.y - (env->cam.x - xy[1]) /
-		tan(ang * M_PI / 180) : env->cam.y - (env->cam.x - (xy[1] + 1)) /
-			tan(ang * M_PI / 180);
-	xaya[0] = give_value(ang, 2);
-	xaya[1] = (ang < 180) ? 64 : -64;
-	while ((int)xy[0] / 64 >= 0 && (int)xy[0] / 64 < env->map_y_max &&
-		(int)xy[1] / 64 >= 0 && (int)xy[1] / 64 < env->map_x_max)
+	set_xy(env->cam, ang, &xy, 1);
+	while ((int)xy[0] / 64 >= 0 && (int)xy[0] / 64 < SIZE_MAP &&
+		(int)xy[1] / 64 >= 0 && (int)xy[1] / 64 < SIZE_MAP)
 	{
-		if (env->map[(int)xy[1] / 64][(int)xy[0] / 64].type == 'G' ||
-			env->map[(int)xy[1] / 64][(int)xy[0] / 64].type == 'S')
-		{
-			sprite->next = create_ray(sqrt(pow(env->cam.y - (int)xy[0], 2) +
-				pow(env->cam.x - (int)xy[1], 2)) * cos((ang - env->cam.angle) *
-				M_PI / 180), (int)xy[0] % 64, 6);
-			sprite->type = 1;
+		if (check_type(xy, env->map, 'D'))
+			setup_door_h(env, xy, ang, &sprite);
+		if (check_type(xy, env->map, 'Y'))
+			sprite->next = create_spr(xy, env, ang);
+		if (check_type(xy, env->map, 'P'))
+			sprite->next = add_pane(xy, env, ang, 1);
+		if (sprite->next != NULL)
 			sprite = sprite->next;
-		}
-		if (env->map[(int)xy[1] / 64][(int)xy[0] / 64].type == 'W' ||
-			((int)xy[0] / 64 < 0 && (int)xy[0] / 64 >= env->map_y_max &&
-			(int)xy[1] / 64 < 0 && (int)xy[1] / 64 >= env->map_x_max))
-				break ;
-		xy[1] += xaya[1];
-		xy[0] += xaya[0];
+		if (check_type(xy, env->map, 'W'))
+			break ;
+		xy[1] += xy[3];
+		xy[0] += xy[2];
 	}
-	hor->dist = sqrt(pow(env->cam.y - (int)xy[0], 2) + pow(env->cam.x -
-		(int)xy[1], 2)) * cos((ang - env->cam.angle) * M_PI / 180);
-	hor->mod = (int)xy[0] % 64;
+	set_wall_h(ang, env, xy, hor);
 	return (hor);
 }
 
@@ -135,51 +96,32 @@ t_ray	*closest_wall(t_env *env, float ang)
 	distance->mod = (hor->dist < ver->dist) ? hor->mod : ver->mod;
 	distance->id = (hor->dist < ver->dist) ? hor->id : ver->id;
 	distance->next = sprite_list(hor, ver);
+	free_listr(hor);
+	free_listr(ver);
 	return (distance);
 }
 
-void	raycasting(t_env *env)
+void	*raycasting(void *data)
 {
-	t_ray	*distance;
-	float	ang;
-	int		xy[3];
-	int		ray;
-	float	cone;
+	int			xy[3];
+	int			ray;
+	float		ang;
+	t_ray		*distance;
+	t_thread	*thread;
 
-	ray = -1;
-	cone = (float)FOV / (float)WIN_WIDTH;
+	thread = (t_thread *)data;
+	ray = thread->start - 1;
 	xy[2] = 0;
-	while (++ray < WIN_WIDTH)
+	while (++ray < thread->end)
 	{
-		ang = env->cam.angle + (ray * cone) - 30;
+		ang = thread->env->cam.angle + (ray * 0.0625) - 30;
 		ang = (ang > 359) ? ang - 360 : ang;
 		ang = (ang < 0) ? ang + 360 : ang;
-		distance = closest_wall(env, ang);
+		distance = closest_wall(thread->env, ang);
 		xy[0] = ray;
 		xy[1] = 0;
-		draw_column(env, distance, xy);
+		draw_column(thread->env, distance, xy);
 		free_listr(distance);
 	}
+	return (NULL);
 }
-
-void	display(t_env *env)
-{
-	raycasting(env);
-	draw_hud(env);
-	check_status(env);
-	mlx_put_image_to_window(env->mlx_ptr, env->win_ptr, env->img_ptr, 0, 0);
-	if (env->gun.id != 0)
-		fire(env);
-	else if (env->reload.id != 0)
-		reload(env);
-	mlx_put_image_to_window(env->mlx_ptr, env->win_ptr, env->img_ptr2, 0, 0);
-	mlx_put_image_to_window(env->mlx_ptr, env->win_ptr, env->img_ptr3, 0, 0);
-	if(env->win != 1 && env->p_health > 0)
-		mlx_string_put(env->mlx_ptr, env->win_ptr, 860, 75, 0xD1E7C3, ft_itoa(env->r_ammo));
-}
-
-/*
-** IMG1 = Raycasting + vie + munitions
-** IMG 2 = GUN
-** IMG3 = HUD
-*/

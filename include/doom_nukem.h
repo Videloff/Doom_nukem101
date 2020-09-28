@@ -1,14 +1,13 @@
 /* ************************************************************************** */
-/*                                                          LE - /            */
-/*                                                              /             */
-/*   doom_nukem.h                                     .::    .:/ .      .::   */
-/*                                                 +:+:+   +:    +:  +:+:+    */
-/*   By: jominodi <jominodi@student.le-101.fr>      +:+   +:    +:    +:+     */
-/*                                                 #+#   #+    #+    #+#      */
-/*   Created: 2019/10/01 11:03:15 by videloff     #+#   ##    ##    #+#       */
-/*   Updated: 2020/01/28 13:42:48 by jominodi    ###    #+. /#+    ###.fr     */
-/*                                                         /                  */
-/*                                                        /                   */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   doom_nukem.h                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: videloff <videloff@student.le-101.fr>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2020/06/22 14:23:32 by videloff          #+#    #+#             */
+/*   Updated: 2020/06/22 14:29:22 by videloff         ###   ########lyon.fr   */
+/*                                                                            */
 /* ************************************************************************** */
 
 #ifndef DOOM_NUKEM_H
@@ -28,7 +27,7 @@
 
 # if defined __linux__
 #  include "keys_linux.h"
-#  include "../minilibx/mlx.h"
+#  include "../libmlx/mlx.h"
 # elif __APPLE__
 #  include "keys.h"
 #  include "../mlx_include_new/mlx.h"
@@ -45,7 +44,7 @@
 # include <sys/stat.h>
 # include <fcntl.h>
 # include <stdlib.h>
-# include <stdio.h>
 # include <math.h>
 # include <pthread.h>
+# include <errno.h>
 #endif

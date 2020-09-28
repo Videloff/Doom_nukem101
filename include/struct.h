@@ -1,54 +1,51 @@
 /* ************************************************************************** */
-/*                                                          LE - /            */
-/*                                                              /             */
-/*   struct.h                                         .::    .:/ .      .::   */
-/*                                                 +:+:+   +:    +:  +:+:+    */
-/*   By: videloff <videloff@student.le-101.fr>      +:+   +:    +:    +:+     */
-/*                                                 #+#   #+    #+    #+#      */
-/*   Created: 2019/10/01 11:09:49 by videloff     #+#   ##    ##    #+#       */
-/*   Updated: 2020/02/11 14:35:44 by videloff    ###    #+. /#+    ###.fr     */
-/*                                                         /                  */
-/*                                                        /                   */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   struct.h                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: raiko <raiko@student.42lyon.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/10/01 11:09:49 by videloff          #+#    #+#             */
+/*   Updated: 2020/06/23 16:28:32 by raiko            ###   ########lyon.fr   */
+/*                                                                            */
 /* ************************************************************************** */
 
 #ifndef STRUCT_H
 # define STRUCT_H
 
+# include <pthread.h>
+
+/*
+**	*********
+**	 TOUCHES
+**	*********
+*/
+
 typedef struct		s_event
 {
-	int				forward;
-	int				back;
-	int				s_left;
-	int				s_right;
-	int				left;
-	int				right;
-	int				m_left;
-	int				m_right;
-	int				m_up;
-	int				m_down;
-	int				hp_down;
-	int				uparrow;
-	int				downarrow;
-	int				walk;
-	int				run;
-	int				escape;
-	int				win;
-	int				space;
+	short			forward;
+	short			back;
+	short			s_left;
+	short			s_right;
+	short			left;
+	short			right;
+	short			m_left;
+	short			m_right;
+	short			m_up;
+	short			m_down;
+	short			hp_down;
+	short			uparrow;
+	short			downarrow;
+	short			walk;
+	short			run;
+	short			escape;
+	short			space;
 }					t_event;
 
 /*
-**	type		= mur / sol / void / end
-**	txtr		= texture de mur / sol
-*/
-
-typedef struct		s_block
-{
-	char			type;
-	char			txtr;
-}					t_block;
-
-/*
-**	position de la camera
+**	********
+**	 CAMERA
+**	********
 */
 
 typedef struct		s_position
@@ -57,7 +54,8 @@ typedef struct		s_position
 	double			y;
 	int				speed;
 	double			angle;
-}					t_position;
+	double			z;
+}					t_pos;
 
 typedef struct		s_ray
 {
@@ -67,6 +65,7 @@ typedef struct		s_ray
 	float			id;
 	float			ang;
 	int				wall;
+	int				door;
 	int				cmpt;
 	int				mrg;
 	int				mapy;
@@ -75,8 +74,16 @@ typedef struct		s_ray
 }					t_ray;
 
 /*
-** Structure de texture
+**	************
+**	 RESSOURCES
+**	************
 */
+
+typedef struct		s_block
+{
+	char			type;
+	char			id;
+}					t_block;
 
 typedef struct		s_texture
 {
@@ -96,6 +103,79 @@ typedef struct		s_sprite
 	int				sl;
 }					t_sprite;
 
+/*
+**	****************
+**	 EDITEUR DE MAP
+**	****************
+*/
+
+typedef struct		s_verif
+{
+	short			beginning;
+	short			ending;
+	short			door;
+	short			key;
+	short			ver_p_we;
+	short			ver_p_sn;
+	short			ver_door;
+	short			err;
+}					t_verif;
+
+typedef struct		s_edit
+{
+	int				bpp;
+	int				end;
+	int				sl;
+	short			test_kd;
+	short			state;
+	short			tmpx;
+	short			tmpy;
+	short			mapx;
+	short			mapy;
+	short			zoom;
+	short			size_x;
+	short			size_y;
+	short			num_key;
+	short			num_door;
+	short			link_door;
+	short			save_dx;
+	short			save_dy;
+	short			p_l;
+	short			p_b;
+	unsigned int	color;
+	char			id;
+	char			link_dk;
+	void			*mlx_ptr;
+	void			*win_ptr;
+	void			*img;
+	char			*data;
+	void			*img_ptr;
+	char			*data_ptr;
+	char			*filename;
+	t_block			map[50][50];
+	t_verif			verif;
+	t_sprite		spr[1];
+}					t_edit;
+
+/*
+**	*****
+**	 JEU
+**	*****
+*/
+
+typedef struct		s_player
+{
+	short			life;
+	short			ammo;
+	short			stock;
+	short			keyid;
+	short			corona;
+	short			display_key;
+	short			display_trap;
+	short			screen;
+	char			key[10];
+}					t_player;
+
 typedef struct		s_clr
 {
 	int				r;
@@ -106,92 +186,82 @@ typedef struct		s_clr
 
 typedef struct		s_gun
 {
-	int				obj;
+	short			obj;
 	int				time;
-	int				id;
+	short			id;
 	t_sprite		spr[8];
 }					t_gun;
 
 typedef struct		s_reload
 {
 	int				time;
-	int				id;
+	short			id;
 	t_sprite		spr[6];
 }					t_reload;
 
-/*
-**	map_y_max	= Ligne la plus longue
-**	map_x_max	= colonne la plus grande
-**	w_mini		= nombre de mur minimum
-**	f_mini		= nombre de floor minimum
-*/
-
 typedef	struct		s_env
 {
-	int				map_y_max;
-	int				map_x_max;
-	int				b_mini;
-	int				e_mini;
 	int				up;
 	int				bpp;
 	int				endian;
 	int				size_line;
-	int				sick;
-	int				p_health;
-	int				ammo;
-	int				r_ammo;
-	int				win;
-	int				clock;
-	unsigned long	t;
+	int				size_x;
+	short			num_key;
+	short			num_door;
+	short			door_x;
+	short			door_y;
+	short			sick;
+	short			link_dk;
+	short			door_id;
+	short			jump;
+	short			crouch_id;
+	short			clock;
+	short			clock_key;
+	short			clock_trap;
+	short			coro_clock;
+	short			win;
+	short			gunner_id;
+	short			after_coro;
+	short			clock_screen;
+	short			jump_id;
+	float			cone;
+	float			xa;
+	float			ya;
+	float			xa2;
+	float			ya2;
 	void			*mlx_ptr;
 	void			*win_ptr;
 	void			*img_ptr;
-	void			*img_ptr2;
-	void			*img_ptr3;
 	char			*data_ptr;
-	char			*data_ptr2;
-	char			*data_ptr3;
+	clock_t			t;
+	clock_t			t2;
+	clock_t			t3;
+	clock_t			t4;
+	clock_t			t5;
+	clock_t			t6;
+	t_player		player;
 	t_reload		reload;
 	t_gun			gun;
-	t_block			**map;
-	t_position		cam;
+	t_verif			verif;
+	t_block			map[50][50];
+	t_pos			cam;
 	t_event			ev;
-	t_texture		text[7];
-	t_sprite		sprite[5];
+	t_texture		text[18];
+	t_sprite		sprite[4];
 }					t_env;
 
-typedef struct 		s_tab_edit
+/*
+**	****************
+**	 MULTITHREADING
+**	****************
+*/
+
+typedef struct		s_thread
 {
-	char	type;
-	int		id;
-}					t_tab_edit;
-
-
-typedef struct 		s_edit
-{
-	int				bpp;
-	int				end;
-	int				sl;
-	int				tmpx;
-	int				tmpy;
-	int				mapx;
-	int				mapy;
-	int				zoom;
-	int				size_x;
-	int				size_y;
-	unsigned int	color;
-	char			id;
-	void			*mlx_ptr;
-	void			*win_ptr;
-	void			*img;
-	char			*data;
-	void			*img_ptr;
-	void			*img_ptr2;
-	char			*data_ptr;
-	char			*data_ptr2;
-	t_tab_edit		tab[50][50];
-	t_sprite		spr[1];
-}					t_edit;
-
+	pthread_t		t;
+	short			start;
+	short			end;
+	t_env			*env;
+}					t_thread;
 
 #endif

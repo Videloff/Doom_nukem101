@@ -1,33 +1,64 @@
 /* ************************************************************************** */
-/*                                                          LE - /            */
-/*                                                              /             */
-/*   editor.c                                         .::    .:/ .      .::   */
-/*                                                 +:+:+   +:    +:  +:+:+    */
-/*   By: videloff <videloff@student.le-101.fr>      +:+   +:    +:    +:+     */
-/*                                                 #+#   #+    #+    #+#      */
-/*   Created: 2020/02/05 10:31:34 by jominodi     #+#   ##    ##    #+#       */
-/*   Updated: 2020/02/11 13:54:50 by videloff    ###    #+. /#+    ###.fr     */
-/*                                                         /                  */
-/*                                                        /                   */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   editor.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jominodi <jominodi@student.42lyon.fr>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2020/02/14 12:31:04 by jominodi          #+#    #+#             */
+/*   Updated: 2020/06/23 02:05:17 by jominodi         ###   ########lyon.fr   */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "doom_nukem.h"
 
-void	read_tab(t_edit *edit)
+void	display_error(t_edit *edit)
+{
+	if (edit->verif.err == 1)
+		mlx_string_put(edit->mlx_ptr, edit->win_ptr, 390, 20, 0xFF0000,
+						ERR_VALID_DOOR);
+	else if (edit->verif.err == 2)
+		mlx_string_put(edit->mlx_ptr, edit->win_ptr, 390, 20, 0xFF0000,
+						ERR_NUM_DK);
+	else if (edit->verif.err == 3)
+		mlx_string_put(edit->mlx_ptr, edit->win_ptr, 390, 20, 0xFF0000,
+						ERR_LINK_DK);
+	else if (edit->verif.err == 4)
+		mlx_string_put(edit->mlx_ptr, edit->win_ptr, 390, 20, 0xFF0000,
+						ERR_START);
+	else if (edit->verif.err == 5)
+		mlx_string_put(edit->mlx_ptr, edit->win_ptr, 390, 20, 0xFF0000,
+						ERR_END);
+	else if (edit->verif.err == 6)
+		mlx_string_put(edit->mlx_ptr, edit->win_ptr, 390, 20, 0xFF0000,
+						ERR_WALL);
+	else if (edit->verif.err == 7)
+		mlx_string_put(edit->mlx_ptr, edit->win_ptr, 390, 20, 0xFF0000,
+						ERR_SUP_DK);
+}
+
+void	print_key_door_link(t_edit *edit)
 {
 	int		x;
 	int		y;
-	t_clr	clr;
+	char	str[2];
 
-	x = 0;
-	while (x < 500)
+	x = edit->mapx;
+	str[1] = '\0';
+	while ((x - edit->mapx) < 20 && edit->zoom == 25)
 	{
-		y = 0;
-		while (y < 500)
+		y = edit->mapy;
+		while ((y - edit->mapy) < 20 && edit->zoom == 25)
 		{
-			if (y % edit->zoom == 0)
-				clr = get_color(edit, x / edit->zoom + edit->mapx, y / edit->zoom + edit->mapy);
-			put_pxl_editor2(edit, x, y, clr);
+			if ((edit->map[x][y].type == 'D' || edit->map[x][y].type == 'K' ||
+				edit->map[x][y].type == 'W' || edit->map[x][y].type == 'Z')
+				&& edit->map[x][y].id >= '0' && edit->map[x][y].id <= '9' &&
+					edit->zoom == 25)
+			{
+				str[0] = edit->map[x][y].id;
+				mlx_string_put(edit->mlx_ptr, edit->win_ptr, (x - edit->mapx) *
+					25 + 240, (y - edit->mapy) * 25 + 63, 0xFFFFFF, str);
+			}
 			y++;
 		}
 		x++;
@@ -36,42 +67,41 @@ void	read_tab(t_edit *edit)
 
 void	display_editor(t_edit *edit)
 {
-	read_tab(edit);
-	mlx_put_image_to_window(edit->mlx_ptr, edit->win_ptr, edit->img_ptr2, 230, 50);
+	print_hud_editor(edit);
+	choose_life(edit);
+	choose_bullet(edit);
+	read_tab_editor(edit);
 	mlx_put_image_to_window(edit->mlx_ptr, edit->win_ptr, edit->img_ptr, 0, 0);
+	print_key_door_link(edit);
+	display_error(edit);
 }
 
-static void		loop_mlx_editor(t_edit *edit)
+void	loop_mlx_editor(t_edit *edit)
 {
 	display_editor(edit);
-	mlx_mouse_move(edit->win_ptr, 500, -320);
 	mlx_hook(edit->win_ptr, 2, 1, hold_key_editor, edit);
-	mlx_hook(edit->win_ptr, 4, 0, mouse_hook_editor, edit);  
+	mlx_mouse_hook(edit->win_ptr, mouse_hook_editor, edit);
+	mlx_hook(edit->win_ptr, 33, 1L << 17, exit_hook_editor, edit);
 	mlx_loop(edit->mlx_ptr);
 }
 
-void        editor(char *file, int ac)
+void	editor(char *mode, char *file)
 {
-	t_edit	*edit;
-	
-	if (!(edit = malloc(sizeof(t_edit))))
-		error(3);
-	init_edit_info(edit);
-	if (init_mlx_editor(edit) < 0)
-	{
-		if (edit)
-			free(edit);
-		exit(0);
-	}
-	if (ac == 2)
-		initialise_tab(edit);
+	t_edit	edit;
+
+	init_edit_info(&edit);
+	edit.filename = strdup(file);
+	if (ft_strcmp(mode, "create") == 0)
+		initialise_tab_editor(&edit);
 	else
 	{
-		parsing_editor(file, edit);
-		edit->zoom = edit->size_x > edit->size_y ? 500 / edit->size_x : 500 / edit->size_y;
-		dprintf(1, "%d", edit->zoom);
+		fill_tab_editor(&edit);
+		if (open_file_editor(&edit, 0) == -1)
+			error_editor(&edit, 1, -13);
 	}
-	load_texture_editor(edit);
-	print_hud_editor(edit);
-	loop_mlx_editor(edit);
+	verif_path(file);
+	if (init_mlx_editor(&edit) < 0)
+		exit(0);
+	print_hud_editor(&edit);
+	loop_mlx_editor(&edit);
 }

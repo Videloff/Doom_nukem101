@@ -1,14 +1,13 @@
 /* ************************************************************************** */
-/*                                                          LE - /            */
-/*                                                              /             */
-/*   fire.c                                           .::    .:/ .      .::   */
-/*                                                 +:+:+   +:    +:  +:+:+    */
-/*   By: jominodi <jominodi@student.le-101.fr>      +:+   +:    +:    +:+     */
-/*                                                 #+#   #+    #+    #+#      */
-/*   Created: 2020/01/22 15:29:10 by videloff     #+#   ##    ##    #+#       */
-/*   Updated: 2020/02/11 11:38:18 by jominodi    ###    #+. /#+    ###.fr     */
-/*                                                         /                  */
-/*                                                        /                   */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   fire.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: videloff <videloff@student.le-101.fr>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2020/01/22 15:29:10 by videloff          #+#    #+#             */
+/*   Updated: 2020/06/22 14:29:22 by videloff         ###   ########lyon.fr   */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "doom_nukem.h"
@@ -34,6 +33,7 @@ void			fire(t_env *env)
 		env->gun.id = 0;
 		env->clock = 0;
 		print_gun_animation(env, env->gun.id);
+		deal_damage(env);
 	}
 	env->reload.id = 0;
 }
@@ -52,38 +52,39 @@ void			reload(t_env *env)
 	t2 = clock();
 	if (env->clock == 0 && (env->clock = 1))
 		env->t = t2;
-	if (env->reload.id != 0 && env->ammo < 6 && env->r_ammo > 0)
+	if (env->reload.id != 0 && env->player.ammo < 6 && env->player.stock > 0)
 	{
 		print_reload_animation(env, env->reload.id);
 		if (env->t + env->reload.time <= t2)
 		{
-			if (env->ammo == 6 && env->ammo <= env->r_ammo)
+			if (env->player.ammo == 6 && env->player.ammo <= env->player.stock)
 				env->reload.id = 1;
-			if (env->ammo < 6 && env->ammo < env->r_ammo &&
+			if (env->player.ammo < 6 && env->player.ammo < env->player.stock &&
 						env->reload.id == 5)
 				env->reload.id = 2;
 			else if (env->reload.id != 5)
 				env->reload.id++;
-			if (env->ammo < 6 && env->ammo < env->r_ammo && env->reload.id == 5)
-				env->ammo++;
+			if (env->player.ammo < 6 && env->player.ammo < env->player.stock &&
+					env->reload.id == 5)
+				env->player.ammo++;
 			env->t += env->reload.time;
 		}
 	}
-	dprintf(1, "%lu || %lu\n", env->t, t2);
-	if (env->ammo == 6 || env->ammo == env->r_ammo)
+	if (env->player.ammo == 6 || env->player.ammo == env->player.stock)
 		reload2(env);
 }
 
 int				mouse_hook(int key, int x, int y, t_env *env)
 {
 	x = y;
-	if (key == 1 && env->ammo > 0 && env->gun.id == 0)
+	y = x;
+	if (key == 1 && env->player.ammo > 0 && env->gun.id == 0)
 	{
-		env->ammo--;
-		env->r_ammo--;
+		env->player.ammo--;
+		env->player.stock--;
 		env->gun.id = 1;
 	}
-	else if (key == 1 && env->ammo == 0 && env->r_ammo > 0)
+	else if (key == 1 && env->player.ammo == 0 && env->player.stock > 0)
 		env->reload.id = 1;
 	return (0);
 }
